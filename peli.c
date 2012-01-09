@@ -1,79 +1,145 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
+// #include "huoneet.h"
 
-#define KOKOX 2
-#define KOKOY 2
+#define KOKOX 9
+#define KOKOY 9
+
+
 
 struct point {
 	int x;
 	int y;
 };
 
-int siirto(char suunta, struct point *);
+char maailma[9][9] = { {'#','#','#','#','#','#','#','#','#'},
+		       {'#',' ','A',' ','#',' ','E',' ','#'},
+		       {'#','D',' ','B','#','H',' ','F','#'},
+		       {'#',' ','C',' ','#',' ','G',' ','#'},
+		       {'#','#','#','#','#','#','#','#','#'},
+		       {'#',' ','I',' ','#',' ','M',' ','#'},
+		       {'#','L',' ','J','#','P',' ','N','#'},
+		       {'#',' ','K',' ','#',' ','O',' ','#'},
+		       {'#','#','#','#','#','#','#','#','#'}};
+
+int siirto(char *, struct point *);
 int onko_siirto_laillinen(int, int);
-void testi(void);
+void tulosta_maailma(void);
+void cls(void);
 
 int
 main(int argc, const char *argv[])
 {
 	struct point nykykohta;
-/*	struct point maailma[KOKOX][KOKOY]; */
-	char siirto_input;
+	char siirto_input[128];
 
-	nykykohta.x = 0;
-	nykykohta.y = 0;
+	maailma[2][2] = 'X';
+	tulosta_maailma();
+	nykykohta.x = 2;
+	nykykohta.y = 2;
 
-	fprintf(stdout, "\nAnna suunta (olet nyt pisteessä [%d, %d])\n", nykykohta.x, nykykohta.y);
+	fprintf(stdout, "\nAnna komento");
 	fprintf(stdout, "> ");
 
 
-	while (fscanf(stdin, "%s", &siirto_input)) {
+	while (fgets(siirto_input, 128, stdin)) {
+/*		cls(); */
 		int paluu;
-		fprintf(stdout, "Inputtisi on: %s\n", &siirto_input);
-		if (siirto_input == 'q')
+		maailma[nykykohta.y][nykykohta.x] = ' ';
+		if (siirto_input[0] == 'q')
 			break;
+
 		paluu = siirto(siirto_input, &nykykohta);
-		fprintf(stdout, "Pisteesi on [%d, %d] (%d)\n", nykykohta.x, nykykohta.y, paluu);
 
 		if ( paluu == -1) {
-			fprintf(stdout, "Pisteesi on edelleen [%d, %d]\n", nykykohta.x, nykykohta.y);
+			maailma[nykykohta.y][nykykohta.x] = 'X';
+			tulosta_maailma();
 		} else {
-			fprintf(stdout, "Uusi pisteesi on [%d, %d]\n", nykykohta.x, nykykohta.y);
+			maailma[nykykohta.y][nykykohta.x] = 'X';
+			tulosta_maailma();
 		}
 
-		fprintf(stdout, "\nAnna suunta (olet nyt pisteessä [%d, %d])\n", nykykohta.x, nykykohta.y);
+		fprintf(stdout, "\nAnna komento");
 		fprintf(stdout, "> ");
 	}
 
 	return 0;
 }
 
-
-/* Siirtää (tai ei siirrä) pistettä */
-int
-siirto(char suunta, struct point *p)
+void
+help(void)
 {
-	switch (suunta) {
+	fprintf(stdout, "\nPelin komennot: \n");
+	fprintf(stdout, "Liikkuminen:%-10s(p)ohjoinen, (i)tä, (e)telä, (l)änsi.\n", "");
+	fprintf(stdout, "Katso:%-16sk[ilmansuunta], (esim. kp = katsopohjoiseen)\n", "");
+	fprintf(stdout, "Ota/irroita:%-10so\n", "");
+	fprintf(stdout, "Aseta/kiinnitä/pane:%-2sa\n", "");
+	fprintf(stdout, "Ohjeet/komennot:%-6sh, help, apua\n","");
+	fprintf(stdout, "Lopeta peli:%-10sq\n\n", "");
+	fprintf(stdout, "\n");
+}
+
+void
+cls(void)
+{
+	printf("%c[2J",27);
+}
+
+int
+siirto(char *suunta, struct point *p)
+{
+	if ((strncasecmp("kp", suunta, 2) == 0)) {
+		fprintf(stdout, "Katsot pohjoiseen, näet %c:n\n", maailma[p->y - 1][p->x]);
+	}
+	else if ((strncasecmp("ki", suunta, 2) == 0)) {
+		fprintf(stdout, "Katsot itään, näet %c:n\n", maailma[p->y][p->x + 1]);
+	}
+	else if ((strncasecmp("ke", suunta, 2) == 0)) {
+		fprintf(stdout, "Katsot etelään, näet %c:n\n", maailma[p->y + 1][p->x]);
+	}
+	else if ((strncasecmp("kl", suunta, 2) == 0)) {
+		fprintf(stdout, "Katsot länteen, näet %c:n\n", maailma[p->y][p->x - 1]);
+	}
+	else if ((strncasecmp("kp", suunta, 2) == 0)) {
+		cls();
+	}
+	else if ((strncasecmp("kl", suunta, 2) == 0)) {
+		fprintf(stdout, "Katsot länteen, näet %c:n\n", maailma[p->y][p->x - 1]);
+	}
+	else if ((strncasecmp("kl", suunta, 2) == 0)) {
+		fprintf(stdout, "Katsot länteen, näet %c:n\n", maailma[p->y][p->x - 1]);
+	}
+
+
+
+
+
+
+
+	switch (suunta[0]) {
 	case 'p':
-		if (onko_siirto_laillinen(p->x, p->y - 1) == -1)
+		if (onko_siirto_laillinen(p->x, p->y - 4) == -1)
 			return -1;
-		p->y = p->y - 1;
+		p->y = p->y - 4;
 		break;
 	case 'e':
-		if (onko_siirto_laillinen(p->x, p->y + 1) == -1)
+		if (onko_siirto_laillinen(p->x, p->y + 4) == -1)
 			return -1;
-		p->y = p->y + 1;
+		p->y = p->y + 4;
 		break;
 	case 'i':
-		if (onko_siirto_laillinen(p->x + 1, p->y) == -1)
+		if (onko_siirto_laillinen(p->x + 4, p->y) == -1)
 			return -1;
-		p->x = p->x + 1;
+		p->x = p->x + 4;
 		break;
 	case 'l':
-		if (onko_siirto_laillinen(p->x - 1, p->y) == -1)
+		if (onko_siirto_laillinen(p->x - 4, p->y) == -1)
 			return -1;
-		p->x = p->x - 1;
+		p->x = p->x - 4;
 		break;
+	case 'h':
+		help();
 	}
 	return 0;
 }
@@ -82,37 +148,20 @@ siirto(char suunta, struct point *p)
 int
 onko_siirto_laillinen(int x, int y)
 {
-	if (x < 0 || x > KOKOX)
+	if ((x < 2 || x > KOKOX) || (y < 2 || y > KOKOY)) {
 		return -1;
-	if (y < 0 || y > KOKOY)
-		return -1;
+	}
 	return 0;
 }
 
 void
-testi(void)
-{
-	struct point nykykohta;
-/*	struct point maailma[KOKOX][KOKOY]; */
-	char siirto_input;
-
-	nykykohta.x = 0;
-	nykykohta.y = 0;
-
-	siirto(siirto_input, &nykykohta);
-	fprintf(stdout, "Pisteesi on [%d, %d]\n", nykykohta.x, nykykohta.y);
-	siirto_input = 'e';
-	siirto(siirto_input, &nykykohta);
-	fprintf(stdout, "Pisteesi on [%d, %d]\n", nykykohta.x, nykykohta.y);
-	siirto_input = 'i';
-	siirto(siirto_input, &nykykohta);
-	fprintf(stdout, "Pisteesi on [%d, %d]\n", nykykohta.x, nykykohta.y);
-	siirto_input = 'p';
-	siirto(siirto_input, &nykykohta);
-	fprintf(stdout, "Pisteesi on [%d, %d]\n", nykykohta.x, nykykohta.y);
-	siirto_input = 'l';
-	siirto(siirto_input, &nykykohta);
-	fprintf(stdout, "Pisteesi on [%d, %d]\n", nykykohta.x, nykykohta.y);
-
+tulosta_maailma() {
+	int i = 0;
+	int j = 0;
+	for (i = 0; i < 9; i++) {
+		for (j = 0; j < 9; j++) {
+			fprintf(stdout, "%c", maailma[i][j]);
+		}
+		fprintf(stdout, "\n");
+	}
 }
-
