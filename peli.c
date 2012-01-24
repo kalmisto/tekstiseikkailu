@@ -1,37 +1,18 @@
+#include <sys/stat.h>
+
+#include <err.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <unistd.h>
+#include <bsd/stdlib.h>
+
+
 // #include "huoneet.h"
 
-#define KOKOX 9
-#define KOKOY 9
-
-
-
-struct point {
-	int x;
-	int y;
-};
-
-char rintamasuunta;
-
-
-char maailma[9][9] = { {'#','#','#','#','#','#','#','#','#'},
-		       {'#',' ','A',' ','#',' ','E',' ','#'},
-		       {'#','D',' ','B','o','H',' ','F','#'},
-		       {'#',' ','C',' ','#',' ','G',' ','#'},
-		       {'#','#','#','#','#','#','o','#','#'},
-		       {'#',' ','I',' ','#',' ','M',' ','#'},
-		       {'#','L',' ','J','o','P',' ','N','#'},
-		       {'#',' ','K',' ','#',' ','O',' ','#'},
-		       {'#','#','#','#','#','#','#','#','#'}};
-
-int siirra(char *, struct point *);
-int onko_siirto_laillinen(int, int);
-void tulosta_maailma(void);
-void cls(void);
-void katso(struct point *, int *);
-
+#include "peli.h"
+#include "slist.h"
 
 int
 main(int argc, const char *argv[])
@@ -62,6 +43,7 @@ main(int argc, const char *argv[])
 
 		if ( paluu == -1) {
 			maailma[nykykohta.y][nykykohta.x] = 'X';
+			fprintf(stdout, "Et voi liikkua seinien läpi!\n");
 			tulosta_maailma();
 		} else {
 			maailma[nykykohta.y][nykykohta.x] = 'X';
@@ -96,64 +78,66 @@ cls(void)
 int
 siirra(char *siirto, struct point *p)
 {
-	if ((strncasecmp("kp", siirto, 2) == 0)) {
-		fprintf(stdout, "Katsot pohjoiseen, näet %c:n\n", maailma[p->y - 1][p->x]);
-		rintamasuunta = 'p';
-	}
-	else if ((strncasecmp("ki", siirto, 2) == 0)) {
-		fprintf(stdout, "Katsot itään, näet %c:n\n", maailma[p->y][p->x + 1]);
-		rintamasuunta = 'i';
-	}
-	else if ((strncasecmp("ke", siirto, 2) == 0)) {
-		fprintf(stdout, "Katsot etelään, näet %c:n\n", maailma[p->y + 1][p->x]);
-	}
-	else if ((strncasecmp("kl", siirto, 2) == 0)) {
-		fprintf(stdout, "Katsot länteen, näet %c:n\n", maailma[p->y][p->x - 1]);
-	}
-	else if ((strncasecmp("kp", siirto, 2) == 0)) {
-		cls();
-	}
-	else if ((strncasecmp("kl", siirto, 2) == 0)) {
-		fprintf(stdout, "Katsot länteen, näet %c:n\n", maailma[p->y][p->x - 1]);
-	}
-	else if ((strncasecmp("kl", siirto, 2) == 0)) {
-		fprintf(stdout, "Katsot länteen, näet %c:n\n", maailma[p->y][p->x - 1]);
-	}
-
-
-	switch (siirto[0]) {
 	int ovi = 0;
 	struct point kohde;
+	kohde.y = p->y;
+	kohde.x = p->x;
+
+	if ((strncasecmp("kp", siirto, 2) == 0)) {
+		rintamasuunta = 'p';
+		katso(&kohde, &ovi);
+		return 0;
+	}
+	else if ((strncasecmp("ki", siirto, 2) == 0)) {
+		rintamasuunta = 'i';
+		katso(&kohde, &ovi);
+		return 0;
+	}
+	else if ((strncasecmp("ke", siirto, 2) == 0)) {
+		rintamasuunta = 'e';
+		katso(&kohde, &ovi);
+		return 0;
+	}
+	else if ((strncasecmp("kl", siirto, 2) == 0)) {
+		rintamasuunta = 'l';
+		katso(&kohde, &ovi);
+		return 0;
+	}
+
+	switch (siirto[0]) {
 	case 'p':
-		if (onko_siirto_laillinen(p->x, p->y - 4) == -1)
+		rintamasuunta = 'p';
+		if (onko_siirto_laillinen(p->x, p->y - 4, p) == -1)
 			return -1;
 		p->y = p->y - 4;
+		fprintf(stdout, "\n");
 		break;
 	case 'e':
-		if (onko_siirto_laillinen(p->x, p->y + 4) == -1)
+		rintamasuunta = 'e';
+		if (onko_siirto_laillinen(p->x, p->y + 4, p) == -1)
 			return -1;
 		p->y = p->y + 4;
 		break;
 	case 'i':
-		if (onko_siirto_laillinen(p->x + 4, p->y) == -1)
+		rintamasuunta = 'i';
+		if (onko_siirto_laillinen(p->x + 4, p->y, p) == -1)
 			return -1;
 		p->x = p->x + 4;
 		break;
 	case 'l':
-		if (onko_siirto_laillinen(p->x - 4, p->y) == -1)
+		rintamasuunta = 'l';
+		if (onko_siirto_laillinen(p->x - 4, p->y, p) == -1)
 			return -1;
 		p->x = p->x - 4;
 		break;
+	case 'o':
+		ota(siirto, p);
+		break;
+	case 'm':
+		inventaario();
+		break;
 	case 'k':
-		kohde.y = p->y;
-		kohde.x = p->x;
 		katso(&kohde, &ovi);
-		fprintf(stdout, "Näet %c:n", maailma[kohde.y][kohde.x]);
-		if (ovi == 1) {
-			fprintf(stdout, "ja oven.\n");
-		} else {
-			fprintf(stdout, ".\n");
-		}
 		break;
 	case 'h':
 		help();
@@ -162,42 +146,89 @@ siirra(char *siirto, struct point *p)
 }
 
 void
+ota(char *siirto, struct point *p)
+{
+	switch (rintamasuunta) {
+	case 'p':
+		toteuta_ota(&maailma[p->y - 1][p->x]);
+		break;
+	case 'e':
+		toteuta_ota(&maailma[p->y + 1][p->x]);
+		break;
+	case 'l':
+		toteuta_ota(&maailma[p->y][p->x - 1]);
+		break;
+	case 'i':
+		toteuta_ota(&maailma[p->y][p->x + 1]);
+		break;
+	}
+}
+
+void
+toteuta_ota(char *m)
+{
+	if (*m == ' ') {
+		fprintf(stdout, "Et voi ottaa tyhjää!\n");
+	} else {
+		insert_begining(m);
+		fprintf(stdout, "Otit %c:n\n", *m);
+		*m = ' ';
+	}
+}
+
+void
 katso(struct point *kohde, int *ovi)
 {
 	switch (rintamasuunta) {
 	case 'p':
 		kohde->y = kohde->y - 1;
+		fprintf(stdout, "Katsot pohjoiseen, näet");
 		if (maailma[kohde->y - 1][kohde->x] == 'o') {
-			*ovi = 1;
+		*ovi = 1;
 		}
 		break;
 	case 'e':
 		kohde->y = kohde->y + 1;
+		fprintf(stdout, "Katsot etelään, näet");
 		if (maailma[kohde->y + 1][kohde->x] == 'o') {
 			*ovi = 1;
 		}
 		break;
 	case 'i':
 		kohde->x = kohde->x + 1;
+		fprintf(stdout, "Katsot itään, näet");
 		if (maailma[kohde->y][kohde->x + 1] == 'o') {
 			*ovi = 1;
 		}
 		break;
 	case 'l':
 		kohde->x = kohde->x - 1;
-		if (maailma[kohde->y - 1][kohde->x] == 'o') {
+		fprintf(stdout, "Katsot länteen, näet");
+		if (maailma[kohde->y][kohde->x - 1] == 'o') {
 			*ovi = 1;
 		}
 		break;
 	}
+		if (maailma[kohde->y][kohde->x] == ' ') {
+			fprintf(stdout, " seinän");
+		} else {
+			fprintf(stdout, " %c:n", maailma[kohde->y][kohde->x]);
+			}
+		if (*ovi == 1) {
+			fprintf(stdout, " ja oven.\n");
+		} else {
+			fprintf(stdout, ".\n");
+		}
 }
 
 
 /* Palauttaa 0, mikäli siirto on laillinen */
 int
-onko_siirto_laillinen(int x, int y)
+onko_siirto_laillinen(int x, int y, struct point *nykykohta)
 {
 	if ((x < 2 || x > KOKOX) || (y < 2 || y > KOKOY)) {
+		return -1;
+	} else if (maailma[(y + nykykohta->y)/2][(x + nykykohta->x)/2] == '#') {
 		return -1;
 	}
 	return 0;
