@@ -29,5 +29,6 @@ void cls(void);
 void katso(struct point *, int *);
 void ota(char *, struct point *);
 void toteuta_ota(char *);
+void aseta(struct point *);
 
 #endif

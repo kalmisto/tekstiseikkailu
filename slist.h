@@ -4,11 +4,12 @@
 //#include "peli.h"
 
 struct	node {
-	char mukana[1];
+	char mukana;
 	struct node *next;
 };
 
 void inventaario(void);
 void insert_begining(char *);
 void remove_begining(void);
+char poista_node_idx(char);
 #endif /* _SLIST_H_ */

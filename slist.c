@@ -35,6 +35,31 @@ insert_begining(char *kannossa)
 	}
 }
 
+char
+poista_node_idx(char poistettava)
+{
+	struct node *tmp;
+	struct node *edellinen;
+	
+	edellinen = head;
+	tmp = head;
+	if (head->mukana == poistettava) {
+		remove_begining();
+		return poistettava;
+	}
+	while (tmp->next != NULL) {
+		tmp = tmp->next;
+		if (tmp->mukana == poistettava) {
+			tmp = edellinen->next->next;
+			free(edellinen->next);
+			edellinen->next = tmp;
+			return poistettava;
+		}
+		edellinen = edellinen->next;
+	}
+	return '\0';
+}
+
 void
 remove_begining(void)
 {
@@ -42,8 +67,8 @@ remove_begining(void)
 		struct node *tmp;
 
 		tmp = head;
-		free(head);
-		head = tmp->next;
+		head = head->next;
+		free(tmp);
 		tmp = NULL;
 	}
 }
@@ -56,8 +81,13 @@ inventaario(void)
 	tmp = head;
 	fprintf(stdout, "Sinulla on mukana:\n");
 
+	if (tmp == NULL) {
+		fprintf(stdout, "Ei tavaroita\n");
+		return;
+	}
+
 	do {
-		printf("%s\n", tmp->mukana);
+		printf("%c\n", tmp->mukana);
 		tmp = tmp->next;
 	} while (tmp != NULL);
 }

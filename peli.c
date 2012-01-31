@@ -8,9 +8,6 @@
 #include <unistd.h>
 #include <bsd/stdlib.h>
 
-
-// #include "huoneet.h"
-
 #include "peli.h"
 #include "slist.h"
 
@@ -133,11 +130,17 @@ siirra(char *siirto, struct point *p)
 	case 'o':
 		ota(siirto, p);
 		break;
+	case 'a':
+		aseta(&kohde);
+		break;
 	case 'm':
 		inventaario();
 		break;
 	case 'k':
 		katso(&kohde, &ovi);
+		break;
+	case 't':
+		testi();
 		break;
 	case 'h':
 		help();
@@ -145,6 +148,17 @@ siirra(char *siirto, struct point *p)
 	return 0;
 }
 
+/*void
+testi(piste)
+{
+	siirto(
+}*/
+void
+aseta(struct point *p)
+{
+	char merkki = 'O';
+	poista_node_idx(merkki);
+}
 void
 ota(char *siirto, struct point *p)
 {
